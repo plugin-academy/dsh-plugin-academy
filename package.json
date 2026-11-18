@@ -18,7 +18,7 @@
     "./locale/*.json": "./locale/*.json"
   },
   "license": "MIT",
-  "author": "Beings Labs",
+  "author": "Plugin Academy",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/plugin-academy/dsh-plugin-academy.git"

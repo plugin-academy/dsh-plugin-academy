@@ -18,6 +18,22 @@
           "engines": { "dsh": ">=0.2.0-rc.2 || >=0.2.1-rc.2 || >=0.2.2-rc.1" }
         }
       ]
+    },
+    {
+      "name": "@plugin-academy/dsh-plugin-academy",
+      "title": "Plugin Academy",
+      "description": "Browse catalogs and add plugin indexes you trust in DeepSeek Harness.",
+      "author": "Plugin Academy",
+      "homepage": "https://github.com/plugin-academy/dsh-plugin-academy",
+      "repository": { "url": "https://github.com/plugin-academy/dsh-plugin-academy" },
+      "versions": [
+        {
+          "version": "0.2.0",
+          "publishTimestamp": 1794999027,
+          "source": { "type": "npm", "registry": "https://registry.npmjs.org/" },
+          "engines": { "dsh": ">=0.2.2-rc.3 <0.3.0" }
+        }
+      ]
     }
   ]
 }

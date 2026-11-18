@@ -30,10 +30,16 @@ metadata, and HTTPS install sources. An npm package must declare a DSH bundle;
 the optional `dsh.manifestVersion` must be `1` when present. Remote checks fetch
 metadata only; they never execute or install indexed plugins.
 
-The Featured index references the published `dsh-context@0.85.1` from
-[bowenliang123](https://github.com/bowenliang123/dsh-context), preserving its
-original attribution, repository, runtime requirement and npm source. Structural validity does not
-establish that a plugin is safe. Review code and permissions before installing.
+The Featured index references these published npm releases:
+
+- `dsh-context@0.85.1` from
+  [bowenliang123](https://github.com/bowenliang123/dsh-context).
+- `@plugin-academy/dsh-plugin-academy@0.2.0` from
+  [Plugin Academy](https://github.com/plugin-academy/dsh-plugin-academy).
+
+Both preserve their original attribution, repository, runtime requirements and
+npm source. Structural validity does not establish that a plugin is safe.
+Review code and permissions before installing.
 
 ## Stable publication
 

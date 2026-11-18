@@ -6,7 +6,7 @@ import { loadIndexes, validateIndex, validateManifest, verifyRemote } from '../s
 const [entry] = await loadIndexes()
 test('Featured is natively installable without rewriting author provenance', () => {
   const [plugin] = entry.index.plugins
-  assert.equal(entry.index.plugins.length, 1)
+  assert.equal(entry.index.plugins.length, 2)
   assert.equal(plugin.author, 'bowenliang123')
   assert.equal(plugin.repository.url, 'https://github.com/bowenliang123/dsh-context')
   assert.deepEqual(marketInstallTarget(plugin.name, plugin.versions[0]), {
@@ -14,8 +14,20 @@ test('Featured is natively installable without rewriting author provenance', () 
   })
   assert.equal(entry.url, 'https://plugin.academy/dsh/featured/index.json')
 })
+test('Featured includes the published Plugin Academy release with native npm provenance', () => {
+  const plugin = entry.index.plugins.find(plugin => plugin.name === '@plugin-academy/dsh-plugin-academy')
+  assert.ok(plugin)
+  assert.equal(plugin.author, 'Plugin Academy')
+  assert.equal(plugin.repository.url, 'https://github.com/plugin-academy/dsh-plugin-academy')
+  assert.equal(plugin.versions[0].publishTimestamp, 1794999027)
+  assert.equal(plugin.versions[0].engines.dsh, '>=0.2.2-rc.3 <0.3.0')
+  assert.deepEqual(marketInstallTarget(plugin.name, plugin.versions[0]), {
+    spec: '@plugin-academy/dsh-plugin-academy@0.2.0', registry: 'https://registry.npmjs.org/',
+  })
+})
 test('remote validation accepts an omitted manifestVersion only with a DSH bundle', async t => {
   const [plugin] = entry.index.plugins
+  const indexes = [{ ...entry, index: { ...entry.index, plugins: [plugin] } }]
   const [version] = plugin.versions
   const manifest = {
     name: plugin.name,
@@ -34,16 +46,16 @@ test('remote validation accepts an omitted manifestVersion only with a DSH bundl
     assert.equal(url.href, `https://registry.npmjs.org/${plugin.name}/${version.version}`)
     return Response.json(manifest)
   })
-  await verifyRemote([entry])
+  await verifyRemote(indexes)
   manifest.dsh = { manifestVersion: 1, bundle: { patch: ['./cordis.patch.yml'] } }
-  await verifyRemote([entry])
+  await verifyRemote(indexes)
   for (const dsh of [
     { bundle: { patch: './cordis.patch.yml' }, manifestVersion: 2 },
     { manifestVersion: 1 },
     { bundle: { patch: [] } },
   ]) {
     manifest.dsh = dsh
-    await assert.rejects(verifyRemote([entry]), /not the expected DSH package/)
+    await assert.rejects(verifyRemote(indexes), /not the expected DSH package/)
   }
 })
 test('native validator rejects bad versions, duplicate plugins, and mutable git refs', () => {

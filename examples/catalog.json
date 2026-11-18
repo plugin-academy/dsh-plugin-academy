@@ -1,0 +1,26 @@
+{
+  "format": 1,
+  "sources": [
+    {
+      "url": "https://indexes.example.org/community/index.json",
+      "title": "Example community plugins",
+      "description": "An illustrative index source. Replace these example URLs and metadata before publishing.",
+      "publisher": {
+        "name": "Example Publisher",
+        "url": "https://publisher.example.org"
+      },
+      "pluginCount": 2,
+      "topPlugins": [
+        {
+          "name": "@example/dsh-tools",
+          "title": "Example Tools",
+          "description": "A highlighted plugin supplied by the catalog publisher.",
+          "version": "1.0.0",
+          "homepage": "https://publisher.example.org/plugins/tools"
+        }
+      ],
+      "tags": ["community", "tools"],
+      "updatedAt": "2026-11-16T00:00:00Z"
+    }
+  ]
+}

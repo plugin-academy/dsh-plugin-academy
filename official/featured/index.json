@@ -1,0 +1,23 @@
+{
+  "format": 1,
+  "title": "Plugin Academy Featured",
+  "description": "A curated starting point for DSH. Original publishers retain ownership; inclusion and structural validation are not guarantees of safety.",
+  "plugins": [
+    {
+      "name": "dsh-context",
+      "title": "Context (dsh-context)",
+      "description": "Inspect how a Harness session's context is composed and how it changes over time, using a dashboard and commands.",
+      "author": "bowenliang123",
+      "homepage": "https://github.com/bowenliang123/dsh-context",
+      "repository": { "url": "https://github.com/bowenliang123/dsh-context" },
+      "versions": [
+        {
+          "version": "0.85.1",
+          "publishTimestamp": 1794768513,
+          "source": { "type": "npm", "registry": "https://registry.npmjs.org/" },
+          "engines": { "dsh": ">=0.2.0-rc.2 || >=0.2.1-rc.2 || >=0.2.2-rc.1" }
+        }
+      ]
+    }
+  ]
+}

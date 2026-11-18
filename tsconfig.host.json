@@ -1,0 +1,7 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "./lib/host.tsbuildinfo"
+  },
+  "include": ["src/index.ts", "src/catalog.ts"]
+}

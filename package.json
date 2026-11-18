@@ -1,0 +1,121 @@
+{
+  "name": "@plugin-academy/dsh-plugin-academy",
+  "version": "0.1.0",
+  "description": "Browse catalogs and add plugin indexes you trust in DeepSeek Harness.",
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "types": "./lib/types/client/index.d.ts",
+      "default": "./lib/client.js"
+    },
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json"
+  },
+  "license": "MIT",
+  "author": "Beings Labs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/plugin-academy/dsh-plugin-academy.git"
+  },
+  "icon": "icon.svg",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "plugin-index",
+    "plugin-market"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "lib/*.js",
+    "lib/*.js.map",
+    "lib/THIRD_PARTY_NOTICES.txt",
+    "lib/types/**/*.d.ts",
+    "lib/types/**/*.d.ts.map",
+    "locale/",
+    "cordis.patch.yml",
+    "icon.svg",
+    "examples/catalog.json",
+    "docs/catalogs.md",
+    "docs/indexes.md",
+    "CONTRIBUTING.md",
+    "GOVERNANCE.md",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=22.18.0",
+    "dsh": ">=0.2.2-rc.3 <0.3.0"
+  },
+  "scripts": {
+    "build": "npm run build:plugin && npm run build:indexes",
+    "build:plugin": "npm run check && node scripts/build-plugin.mjs && tsc -b",
+    "build:indexes": "node scripts/build-indexes.mjs",
+    "check": "tsc --noEmit -p tsconfig.host.json && tsc --noEmit -p tsconfig.client.json",
+    "validate": "node scripts/validate.mjs",
+    "validate:remote": "node scripts/validate.mjs --remote",
+    "test": "node --test test/*.test.mjs",
+    "test:academy": "node --test test/academy.mjs",
+    "test:package": "npm run build && node --test test/package.mjs",
+    "prepack": "npm run build:plugin"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "~4.1.0",
+    "@deepseek-ai/schemastery": "~3.19.0"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "~4.1.0",
+    "@deepseek-ai/dsh-api-gateway": "0.2.2-rc.3",
+    "@deepseek-ai/dsh-api-remotes": "0.2.2-rc.3",
+    "@deepseek-ai/dsh-client-connection": "0.2.2-rc.3",
+    "@deepseek-ai/dsh-client-locale": "0.2.2-rc.3",
+    "@deepseek-ai/dsh-client-store": "0.2.2-rc.3",
+    "@deepseek-ai/dsh-client-ui-plugin-manager": "0.2.2-rc.3",
+    "@deepseek-ai/dsh-client-ui-primitives": "0.2.2-rc.3",
+    "@deepseek-ai/dsh-client-ui-renderer": "0.2.2-rc.3",
+    "@deepseek-ai/dsh-client-ui-settings": "0.2.2-rc.3",
+    "@deepseek-ai/dsh-client-ui-slots": "0.2.2-rc.3",
+    "@deepseek-ai/dsh-plugin-market": "0.2.2-rc.3",
+    "@deepseek-ai/dsh-plugin-market-index": "0.2.2-rc.3",
+    "@deepseek-ai/dsh-settings": "0.2.2-rc.3",
+    "@deepseek-ai/dsh-typert-protocol": "0.2.2-rc.3",
+    "@deepseek-ai/schemastery": "~3.19.0",
+    "@types/node": "^24.0.0",
+    "@types/react": "^18.3.18",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "esbuild": "^0.28.2",
+    "immer": "^10.1.1",
+    "react": "^18.3.1",
+    "typescript": "^7.0.2",
+    "zustand": "~4.5.7"
+  },
+  "overrides": {
+    "@deepseek-ai/dsh-http-proxy": {
+      "undici": "8.12.2"
+    }
+  },
+  "dsh": {
+    "manifestVersion": 1,
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-api-remotes",
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-plugin-manager",
+        "@deepseek-ai/dsh-client-ui-settings"
+      ]
+    }
+  }
+}

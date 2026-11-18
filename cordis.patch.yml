@@ -1,0 +1,3 @@
+- insert:
+    - id: dsh-plugin-academy
+      name: '@plugin-academy/dsh-plugin-academy'

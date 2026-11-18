@@ -1,12 +1,13 @@
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
 import {
-  Button, IconPlusOutlineRegular, IconRefreshOutlineRegular,
+  Button, IconCheckOutlineRegular, IconPlusOutlineRegular, IconRefreshOutlineRegular,
   IconSearchOutlineRegular, IconSettingsOutlineRegular, Input, Modal, Tag,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { InjectFace, PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import type { MarketPlugin } from '@deepseek-ai/dsh-plugin-market-index'
 import { configuredIndexKey, normalizeIndexUrl, type IndexSource, type TopPlugin } from '../catalog.ts'
 import { CatalogSettingsDialog, type CatalogForm } from './CatalogSettings.tsx'
+import { collectionIds, groupCollections } from './collections.ts'
 import type { PluginIndexesFace, PluginIndexesState } from './controller.ts'
 import { PreviewError, readIndexPreview } from './preview.ts'
 
@@ -17,6 +18,12 @@ declare const __DSH_PLUGIN_ACADEMY_ICON__: string
 
 const noSources: readonly IndexSource[] = []
 const fold = (text: string) => text.normalize('NFKC').toLowerCase()
+const collectionCopy = {
+  academy: { title: 'academyCollection', description: 'academyCollectionDescription' },
+  community: { title: 'communityCollection', description: 'communityCollectionDescription' },
+  official: { title: 'officialCollection', description: 'officialCollectionDescription' },
+  other: { title: 'otherCollections', description: 'otherCollectionsDescription' },
+} as const
 
 function searchText(source: IndexSource): string {
   return fold([
@@ -34,6 +41,7 @@ export function PluginIndexesTab(props: Props) {
   const { t } = props
   const state = props.usePluginIndexes(snapshot => snapshot)
   const id = useId()
+  const browseHeading = useRef<HTMLHeadingElement>(null)
   const locale = props.getLocale()
   const [query, setQuery] = useState('')
   const [dialog, setDialog] = useState<'catalog' | 'custom' | null>(null)
@@ -43,9 +51,10 @@ export function PluginIndexesTab(props: Props) {
 
   const sources = state.catalog?.sources ?? noSources
   const searchable = useMemo(() => sources.map(source => ({ source, text: searchText(source) })), [sources])
-  const visible = useMemo(() => {
+  const { groups, matchCount } = useMemo(() => {
     const terms = fold(query).trim().split(/\s+/).filter(Boolean)
-    return searchable.filter(({ text }) => terms.every(term => text.includes(term))).map(({ source }) => source)
+    const matches = searchable.filter(({ text }) => terms.every(term => text.includes(term))).map(({ source }) => source)
+    return { groups: groupCollections(matches), matchCount: matches.length }
   }, [searchable, query])
   const formats = useMemo(() => ({
     number: new Intl.NumberFormat(locale),
@@ -81,8 +90,16 @@ export function PluginIndexesTab(props: Props) {
         {state.indexesStatus === 'unavailable' ? <p className="dsh-plugin-academy-notice">{t('unavailable')}</p> : null}
         {state.indexesStatus === 'loading' && state.indexes.length === 0 ? <p>{t('loadingIndexes')}</p> : null}
         {state.mutationError === null ? null : <p className="dsh-plugin-academy-error">{state.mutationError}</p>}
+      </div>
+      <div className="dsh-plugin-academy-success" data-visible={state.changed !== null || undefined}>
+        <p className="dsh-plugin-academy-feedback dsh-plugin-academy-main" role="status" aria-live="polite">
+          {state.changed === null ? null : t(state.changed.kind === 'add' ? 'addedNotice' : 'removedNotice')}
+        </p>
         {state.changed === null ? null : (
-          <p className="dsh-plugin-academy-success">{t(state.changed.kind === 'add' ? 'addedNotice' : 'removedNotice')}</p>
+          <Button variant="outline" size="sm" aria-label={t('closeIndexNotice')} onClick={() => {
+            browseHeading.current?.focus()
+            props.dismissChange()
+          }}>{t('close')}</Button>
         )}
       </div>
       {state.indexesError === null ? null : (
@@ -95,10 +112,10 @@ export function PluginIndexesTab(props: Props) {
       <section className="dsh-plugin-academy-group" aria-labelledby={`${id}-browse`}>
         <div className="dsh-plugin-academy-section-head">
           <div>
-            <h3 id={`${id}-browse`}>{t('browseCatalog')}</h3>
+            <h3 id={`${id}-browse`} ref={browseHeading} tabIndex={-1}>{t('browseCatalog')}</h3>
             <p className="dsh-plugin-academy-muted" role="status">
               {state.catalog === null ? null : t('results', {
-                count: formats.number.format(visible.length), total: formats.number.format(sources.length),
+                count: formats.number.format(matchCount), total: formats.number.format(sources.length),
               })}
             </p>
           </div>
@@ -121,7 +138,7 @@ export function PluginIndexesTab(props: Props) {
           {loadingCatalog && state.catalog === null ? <p className="dsh-plugin-academy-empty">{t('loadingCatalog')}</p> : null}
           {state.catalogStatus === 'ready' && sources.length === 0
             ? <p className="dsh-plugin-academy-empty">{t('empty')}</p> : null}
-          {sources.length > 0 && visible.length === 0 ? <p className="dsh-plugin-academy-empty">{t('noMatches')}</p> : null}
+          {sources.length > 0 && matchCount === 0 ? <p className="dsh-plugin-academy-empty">{t('noMatches')}</p> : null}
         </div>
         {state.catalogStatus === 'disabled' || state.catalogError !== null ? (
           <div className="dsh-plugin-academy-notice dsh-plugin-academy-actions">
@@ -133,42 +150,54 @@ export function PluginIndexesTab(props: Props) {
             <Button variant="outline" size="sm" aria-haspopup="dialog" onClick={openSettings}>{t('configure')}</Button>
           </div>
         ) : null}
-        {visible.length === 0 ? null : (
-          <ul className="dsh-plugin-academy-cards" data-many={visible.length > 50 || undefined} aria-labelledby={`${id}-browse`}>
-            {visible.map(source => {
-              const configured = added.get(source.url)
-              return <CatalogCard key={source.url} source={source} t={t} formats={formats}
-                onPreview={() => setPreviewSource(source)}
-                configured={configured} pending={state.pending !== null && configuredIndexKey(state.pending) === source.url}
-                disabled={!canEdit} onToggle={() => {
-                  if (configured === undefined) void props.add(source.url)
-                  else setRemoving({ url: configured.url, title: source.title })
-                }} />
-            })}
-          </ul>
-        )}
+        {collectionIds.map(collection => {
+          const matches = groups[collection]
+          if (matches.length === 0) return null
+          const heading = `${id}-${collection}`
+          const copy = collectionCopy[collection]
+          return (
+            <section key={collection} className="dsh-plugin-academy-collection" data-collection={collection} aria-labelledby={heading}>
+              <div className="dsh-plugin-academy-collection-heading">
+                <h4 id={heading}>{t(copy.title)}</h4>
+                <p className="dsh-plugin-academy-muted">{t(copy.description)}</p>
+              </div>
+              <ul className="dsh-plugin-academy-cards" role="list" data-many={matches.length > 50 || undefined}>
+                {matches.map(source => {
+                  const configured = added.get(source.url)
+                  return <CatalogCard key={source.url} source={source} t={t} formats={formats}
+                    onPreview={() => setPreviewSource(source)}
+                    configured={configured} pending={state.pending !== null && configuredIndexKey(state.pending) === source.url}
+                    disabled={!canEdit} onToggle={() => {
+                      if (configured === undefined) void props.add(source.url)
+                      else setRemoving({ url: configured.url, title: source.title })
+                    }} />
+                })}
+              </ul>
+            </section>
+          )
+        })}
       </section>
 
       {other.length === 0 ? null : (
         <section className="dsh-plugin-academy-group" aria-labelledby={`${id}-added`}>
           <div>
-            <h3 id={`${id}-added`}>{t('otherSources')}</h3>
-            <p className="dsh-plugin-academy-muted">{t('otherDescription')}</p>
+            <h3 id={`${id}-added`}>{t(state.catalogStatus === 'disabled' ? 'addedSources' : 'otherSources')}</h3>
+            {state.catalogStatus === 'disabled' ? null : <p className="dsh-plugin-academy-muted">{t('otherDescription')}</p>}
           </div>
           <ul className="dsh-plugin-academy-cards" data-many={other.length > 50 || undefined}>
             {other.map(index => {
               const title = index.title === undefined ? index.url : props.resolveText(index.title)
               return (
                 <li key={index.url} className="dsh-plugin-academy-card">
-                  <div className="dsh-plugin-academy-title-row"><h4>{title}</h4><Tag tone="success">{t('added')}</Tag></div>
+                  <h4>{title}</h4>
                   {index.title === undefined ? null : <code className="dsh-plugin-academy-url" translate="no">{index.url}</code>}
                   {index.error === undefined ? null : <p className="dsh-plugin-academy-error">{index.error}</p>}
-                  <div className="dsh-plugin-academy-card-footer">
+                  <IndexCardFooter t={t} added>
                     <Button variant="outline" size="sm" disabled={!canEdit} aria-label={t('removeNamed', { name: title })}
                       aria-haspopup="dialog" onClick={() => setRemoving({ url: index.url, title })}>
                       {state.pending === index.url ? t('saving') : t('remove')}
                     </Button>
-                  </div>
+                  </IndexCardFooter>
                 </li>
               )
             })}
@@ -220,13 +249,7 @@ function CatalogCard({ t, source, formats, configured, pending, disabled, onTogg
     <li className="dsh-plugin-academy-card">
       <div className="dsh-plugin-academy-card-heading">
         <div className="dsh-plugin-academy-card-identity">
-          <div className="dsh-plugin-academy-title-row">
-            <h4>{source.title}</h4>
-            {source.curation === 'official' ? (
-              <Tag tone="info">{t(source.publisher.id === 'plugin.academy' ? 'academyCollection' : 'publisherCollection')}</Tag>
-            ) : source.curation === 'community' ? <Tag tone="neutral">{t('community')}</Tag> : null}
-            {configured === undefined ? null : <Tag tone="success">{t('added')}</Tag>}
-          </div>
+          <h5 translate="no">{source.title}</h5>
           <p className="dsh-plugin-academy-muted">
             {t('publisher')}{' '}
             {source.publisher.url === undefined ? source.publisher.name : (
@@ -264,7 +287,7 @@ function CatalogCard({ t, source, formats, configured, pending, disabled, onTogg
         {source.publisher.id === undefined ? null : <p>{t('publisherId')} <code translate="no">{source.publisher.id}</code></p>}
         <p><ExternalLink href={source.url}><code translate="no">{source.url}</code></ExternalLink></p>
       </details>
-      <div className="dsh-plugin-academy-card-footer">
+      <IndexCardFooter t={t} added={configured !== undefined}>
         <Button variant="outline" size="sm" aria-haspopup="dialog"
           aria-label={t('previewNamed', { name: source.title })} onClick={onPreview}>{t('previewPlugins')}</Button>
         <Button variant={configured === undefined ? 'primary' : 'outline'} size="sm" disabled={disabled}
@@ -272,8 +295,21 @@ function CatalogCard({ t, source, formats, configured, pending, disabled, onTogg
           aria-haspopup={configured === undefined ? undefined : 'dialog'} onClick={onToggle}>
           {pending ? t('saving') : t(configured === undefined ? 'add' : 'remove')}
         </Button>
-      </div>
+      </IndexCardFooter>
     </li>
+  )
+}
+
+function IndexCardFooter({ t, added, children }: Localized & { added: boolean; children: ReactNode }) {
+  return (
+    <div className="dsh-plugin-academy-card-footer">
+      {added ? (
+        <Tag tone="success" className="dsh-plugin-academy-added">
+          <IconCheckOutlineRegular size={12} aria-hidden="true" />{t('added')}
+        </Tag>
+      ) : null}
+      <div className="dsh-plugin-academy-actions">{children}</div>
+    </div>
   )
 }
 
@@ -320,7 +356,7 @@ function IndexPreviewDialog({ t, source, number, locale, resolveText, close }: L
 
   return (
     <Modal open title={t('previewTitle', { name: source.title })} description={t('previewIntro')} closeLabel={t('close')}
-      className="dsh-plugin-academy-preview-dialog" contentClassName="dsh-plugin-academy-preview-scroll" onClose={close}>
+      className="dsh-plugin-academy-preview-dialog" contentClassName="dsh-plugin-academy-modal-scroll" onClose={close}>
       <div className="dsh-plugin-academy dsh-plugin-academy-preview">
         <p className="dsh-plugin-academy-muted"><ExternalLink href={source.url}>{t('openIndex')}</ExternalLink></p>
         {state.status === 'loading' ? (

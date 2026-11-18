@@ -1,15 +1,18 @@
 # Governance
 
 Anyone may submit indexes, plugin additions or metadata corrections.
-Plugin Academy maintainers approve official and hosted community indexes.
+Plugin Academy maintainers approve Academy-curated and hosted community indexes.
 They also review and release the DeepSeek Harness plugin from this same root
 package, preserving its native DSH integration and configuration contracts.
 Only maintainers assign reviewed/featured status in the canonical metadata
 repository. Independent publishers retain editorial responsibility and
-ownership of their community collections.
+ownership of their collections.
 
-Official curation, hosting, automated validation, identity verification and
-security review are separate claims. None is a guarantee of executable safety.
+Academy curation (`academy`), community maintenance (`community`), publisher
+ownership (`official`), hosting, automated validation, identity verification and
+security review are separate claims. `official` is reserved for an index
+published by a company that owns every included plugin. None of these labels
+is a guarantee of executable safety.
 Maintainers may remove malicious entries promptly, record the reason, and
 accept appeals through issues.
 

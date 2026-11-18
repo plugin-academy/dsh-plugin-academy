@@ -58,6 +58,23 @@ test('reads the latest registry before writes and preserves unrelated sources', 
   assert.deepEqual(value.state.getSnapshot().changed, { kind: 'remove', url: a })
 })
 
+test('dismisses the index notification without changing the registry or suppressing later notices', async t => {
+  const value = controller(t)
+  const sources = registry([a, b])
+  value.attachRegistry(sources)
+  await value.load()
+  await value.remove(a)
+  const before = value.state.getSnapshot()
+  assert.deepEqual(before.changed, { kind: 'remove', url: a })
+  value.face(text => text, () => 'en').dismissChange()
+  assert.deepEqual(value.state.getSnapshot(), { ...before, changed: null })
+  assert.deepEqual(sources.writes, [[b]])
+  await value.reloadIndexes()
+  assert.equal(value.state.getSnapshot().changed, null)
+  await value.add(a)
+  assert.deepEqual(value.state.getSnapshot().changed, { kind: 'add', url: a })
+})
+
 test('checks actual host availability before calling declared Remote facades', async t => {
   const value = controller(t)
   const sources = registry([a])

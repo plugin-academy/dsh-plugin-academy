@@ -29,10 +29,11 @@ function CatalogUrlEditor({ t, form, close }: Localized & {
 }) {
   const id = useId()
   const inputRef = useRef<HTMLInputElement>(null)
-  const [draft, setDraft] = useState<{ value: string; revision: number } | null>(null)
+  const choiceRef = useRef<HTMLInputElement>(null)
+  const [draft, setDraft] = useState<{ value: string; addedOnly: boolean; revision: number } | null>(null)
   const [saving, setSaving] = useState(false)
   const [notice, setNotice] = useState<'saved' | 'saveFailed' | null>(null)
-  const [invalid, setInvalid] = useState(false)
+  const [invalid, setInvalid] = useState<'catalogUrlRequired' | 'invalidCatalogUrl' | null>(null)
   const [failure, setFailure] = useState<string | null>(null)
   const dirty = draft !== null
   useEffect(() => {
@@ -44,27 +45,32 @@ function CatalogUrlEditor({ t, form, close }: Localized & {
 
   const state = form?.state
   const accepted = typeof state?.value?.catalogUrl === 'string' ? state.value.catalogUrl : undefined
+  const acceptedAddedOnly = accepted?.trim() === ''
+  const acceptedUrl = acceptedAddedOnly ? '' : accepted ?? ''
+  const addedOnly = draft?.addedOnly ?? acceptedAddedOnly
+  const value = draft?.value ?? acceptedUrl
   const revision = state?.revision
   const stale = draft !== null && draft.revision !== revision
   const blocked = saving || state?.writable !== true
 
-  function edit(value: string) {
+  function edit(value: string, addedOnly = false) {
     if (revision === undefined) return
-    setDraft(value === accepted ? null : { value, revision: draft?.revision ?? revision })
+    const unchanged = addedOnly === acceptedAddedOnly && (addedOnly || value === acceptedUrl)
+    setDraft(unchanged ? null : { value, addedOnly, revision: draft?.revision ?? revision })
     setNotice(null)
-    setInvalid(false)
+    setInvalid(null)
     setFailure(null)
   }
 
   async function save() {
     if (blocked || stale || draft === null || form === undefined) return
-    const input = draft.value.trim()
     let url = ''
-    if (input !== '') {
+    if (!draft.addedOnly) {
+      const input = draft.value.trim()
       try {
         url = normalizeCatalogUrl(input)
       } catch {
-        setInvalid(true)
+        setInvalid(input === '' ? 'catalogUrlRequired' : 'invalidCatalogUrl')
         inputRef.current?.focus()
         return
       }
@@ -97,25 +103,36 @@ function CatalogUrlEditor({ t, form, close }: Localized & {
       event.preventDefault()
       void save()
     }}>
-      <div className="dsh-plugin-academy-field">
-        <label htmlFor={id}>{t('catalogUrl')}</label>
-        <Input ref={inputRef} id={id} name="catalogUrl" type="url" inputMode="url" autoComplete="off"
-          spellCheck={false} autoCapitalize="none" translate="no" value={draft?.value ?? accepted ?? ''}
-          disabled={blocked} placeholder={DEFAULT_CATALOG_URL} aria-describedby={`${id}-hint ${id}-error`}
-          aria-invalid={invalid} onChange={event => edit(event.target.value)} />
-        <p className="dsh-plugin-academy-muted" id={`${id}-hint`}>{t('catalogHint')}</p>
-        <p className="dsh-plugin-academy-error" id={`${id}-error`} aria-live="polite">
-          {invalid ? t('invalidCatalogUrl') : null}
-        </p>
-      </div>
-      {accepted === undefined && draft === null ? <p className="dsh-plugin-academy-muted">{t('catalogInherited')}</p> : null}
+      <label className="dsh-plugin-academy-settings-choice">
+        <input ref={choiceRef} type="checkbox" name="addedIndexesOnly" checked={addedOnly} disabled={blocked}
+          aria-labelledby={`${id}-choice`} aria-describedby={`${id}-choice-hint`}
+          onChange={event => edit(value, event.currentTarget.checked)} />
+        <span>
+          <strong id={`${id}-choice`}>{t('addedIndexesOnly')}</strong>
+          <span className="dsh-plugin-academy-muted" id={`${id}-choice-hint`}>{t('addedIndexesOnlyHint')}</span>
+        </span>
+      </label>
+      {addedOnly ? null : (
+        <>
+          <div className="dsh-plugin-academy-field">
+            <label htmlFor={id}>{t('catalogUrl')}</label>
+            <Input ref={inputRef} id={id} name="catalogUrl" type="url" inputMode="url" autoComplete="off"
+              spellCheck={false} autoCapitalize="none" translate="no" value={value}
+              disabled={blocked} placeholder={`${DEFAULT_CATALOG_URL}\u2026`} aria-describedby={`${id}-hint ${id}-error`}
+              aria-invalid={invalid !== null} onChange={event => edit(event.target.value)} />
+            <p className="dsh-plugin-academy-muted" id={`${id}-hint`}>{t('catalogHint')}</p>
+            <p className="dsh-plugin-academy-error" id={`${id}-error`} aria-live="polite">
+              {invalid === null ? null : t(invalid)}
+            </p>
+          </div>
+          {accepted === undefined && !dirty ? <p className="dsh-plugin-academy-muted">{t('catalogInherited')}</p> : null}
+          <div className="dsh-plugin-academy-actions">
+            <Button size="sm" variant="outline" type="button" disabled={blocked || stale}
+              onClick={() => edit(DEFAULT_CATALOG_URL)}>{t('useAcademy')}</Button>
+          </div>
+        </>
+      )}
       {!state.writable ? <p role="status">{t('settingsUnavailable')}</p> : null}
-      <div className="dsh-plugin-academy-actions">
-        <Button size="sm" variant="outline" type="button" disabled={blocked || stale}
-          onClick={() => edit(DEFAULT_CATALOG_URL)}>{t('useAcademy')}</Button>
-        <Button size="sm" type="button" disabled={blocked || stale}
-          onClick={() => edit('')}>{t('disableCatalog')}</Button>
-      </div>
       <div className="dsh-plugin-academy-feedback" role="status" aria-live="polite">
         {stale ? t('settingsChanged') : notice === null ? null : t(notice)}
         {failure === null ? null : <p className="dsh-plugin-academy-error">{failure}</p>}
@@ -128,10 +145,10 @@ function CatalogUrlEditor({ t, form, close }: Localized & {
           <Button type="button" disabled={saving} onClick={() => {
             setDraft(null)
             setNotice(null)
-            setInvalid(false)
+            setInvalid(null)
             setFailure(null)
-            inputRef.current?.focus()
-          }}>{t('reloadSavedUrl')}</Button>
+            choiceRef.current?.focus()
+          }}>{t('reloadSavedSettings')}</Button>
         ) : null}
         <Button type="submit" variant="primary" disabled={blocked || !dirty || stale}
           icon={saving ? <span className="dsh-plugin-academy-spinner" aria-hidden="true" /> : undefined}>
@@ -143,6 +160,7 @@ function CatalogUrlEditor({ t, form, close }: Localized & {
 
   return close === undefined ? body : (
     <Modal open closeLabel={t('close')} title={t('configure')} description={t('settingsDescription')}
+      className="dsh-plugin-academy-settings-dialog" contentClassName="dsh-plugin-academy-modal-scroll"
       onClose={() => { if (!saving) close() }}>
       {body}
     </Modal>

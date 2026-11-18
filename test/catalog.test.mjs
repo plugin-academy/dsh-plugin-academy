@@ -35,8 +35,10 @@ test('normalizes URLs and produces the exact minimal output shape', () => {
 })
 
 test('preserves explicit curation without inferring trust for other catalogs', () => {
-  for (const curation of ['official', 'community']) {
-    assert.equal(parseCatalog(catalog(source({ curation }))).sources[0].curation, curation)
+  for (const curation of ['academy', 'community', 'official']) {
+    const parsed = parseCatalog(catalog(source({ curation })))
+    assert.equal(parsed.sources[0].curation, curation)
+    assert.deepEqual(parseCatalog(parsed), parsed)
   }
   assert.equal(parseCatalog(catalog(source())).sources[0].curation, undefined)
   assert.throws(() => parseCatalog(catalog(source({ curation: 'safe' }))), /curation/)

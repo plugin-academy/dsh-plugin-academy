@@ -68,8 +68,10 @@ setup details.
 
 ## Native indexes
 
-Propose additions through pull requests. Official collections live under
-`official/`; accepted community-hosted definitions belong under `community/`.
+Propose additions through pull requests. Academy-curated collections live under
+the existing `official/` source directory; this storage path does not set their
+catalog curation, which is `academy`. Accepted community-hosted definitions
+belong under `community/`.
 Register the stable route and reviewed publication timestamp in `indexes.json`.
 Do not add fabricated versions or mutable Git branches as install targets.
 
@@ -86,7 +88,9 @@ Schema validation alone is not a security review.
 
 Independent publishers do not have to move their repositories here. Register
 their external HTTPS index in `plugin-academy/agent-resources` instead, with
-community curation, external hosting, and their original publisher identity.
+external hosting and their original publisher identity. Use `community`
+curation unless the publishing company owns every included plugin; those
+publisher-owned indexes may use `official` with ownership provenance.
 Do not copy entire plugin packages into this repository.
 
 Report malicious entries through private GitHub vulnerability reporting when

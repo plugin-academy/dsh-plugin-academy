@@ -24,6 +24,7 @@ export interface PluginIndexesFace {
   reloadIndexes: () => void
   add: (url: string) => Promise<boolean>
   remove: (url: string) => void
+  dismissChange: () => void
   resolveText: (text: NonNullable<MarketIndexSummary['title']>) => string
   getLocale: () => string
 }
@@ -150,6 +151,10 @@ export class PluginIndexesController {
     await this.mutate('remove', url)
   }
 
+  dismissChange(): void {
+    if (this.state.getSnapshot().changed !== null) this.publish({ changed: null })
+  }
+
   private async mutate(kind: 'add' | 'remove', input: string): Promise<boolean> {
     const registry = this.registry
     if (registry === undefined || this.disposed) {
@@ -212,6 +217,7 @@ export class PluginIndexesController {
       reloadIndexes: () => { void this.reloadIndexes() },
       add: url => this.add(url),
       remove: url => { void this.remove(url) },
+      dismissChange: () => this.dismissChange(),
       resolveText,
       getLocale,
     }

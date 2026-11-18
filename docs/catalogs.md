@@ -10,7 +10,12 @@ sample URLs and publisher details. Each source needs `url`, `title`,
 `publisher.name`, and `pluginCount` (a non-negative safe integer).
 
 - Optional fields include `id`, `description`, `publisher.id`, `publisher.url`,
-  `curation` (`official` or `community`), `tags`, `updatedAt`, and `topPlugins`.
+  `curation` (`academy`, `community`, or `official`), `tags`, `updatedAt`, and
+  `topPlugins`.
+- `academy` identifies Plugin Academy-curated collections; `community`
+  identifies independently curated collections. `official` is reserved for an
+  index published by a company that owns every included plugin. These labels
+  describe curation and ownership, not verification or executable safety.
 - A catalog can contain up to 500 sources. Each source may have up to 20 tags
   and up to 10 highlighted plugins (or `pluginCount`, if smaller). A highlight
   needs a package `name`; `title`, `description`, `version`, and `homepage`

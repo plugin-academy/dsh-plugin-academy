@@ -18,7 +18,10 @@ Replace `<profile>` with your profile name. Restart Harness and open
 
 ## Find and add an index
 
-Each index card shows how many plugins the publisher lists.
+**Browse Plugin Indexes** separates Academy, Community, and Official
+collections. Each card shows how many plugins the publisher lists. An
+**Added** badge by the card's actions means the index is already in your
+profile.
 
 - Search the catalog by index, publisher, package, or tag. Select **View
   Plugins** to see names, descriptions, listed versions, authors, and source
@@ -37,9 +40,10 @@ installing anything.
 ## Change the catalog
 
 In the **Plugin Academy** tab, open **Catalog Settings**. Paste a compatible
-catalog URL or choose **Use Plugin Academy**, then select **Save Catalog URL**.
-To browse only the indexes you've added, choose **Turn Off Catalog** and save.
-Changing or disabling the catalog does not change your added indexes.
+catalog URL or choose **Use Plugin Academy**, then select **Save Catalog Settings**.
+To hide catalog browsing, check **Show Only Added Indexes** and save. You can
+still use **Add by URL**. This setting does not remove indexes or plugins.
+To browse a catalog again, uncheck the option, choose a catalog URL, and save.
 
 The [default catalog](https://plugin.academy/catalogs/dsh/catalog.json) lists
 indexes; it is not itself an index for **Add by URL**. Catalog URLs use HTTPS

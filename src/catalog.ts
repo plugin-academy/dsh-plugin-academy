@@ -16,7 +16,7 @@ export interface IndexSource {
   topPlugins: TopPlugin[]
   tags: string[]
   updatedAt?: string
-  curation?: 'official' | 'community'
+  curation?: 'academy' | 'community' | 'official'
   pluginAcademy?: { resourceNames: string[] }
 }
 
@@ -128,8 +128,8 @@ function indexSource(value: unknown, position: number): IndexSource {
   if (publisher.url !== undefined) source.publisher.url = httpUrl(publisher.url, `${path}.publisher.url`, true).href
   if (input.description !== undefined) source.description = text(input.description, `${path}.description`, 2000)
   if (input.curation !== undefined) {
-    if (input.curation !== 'official' && input.curation !== 'community') {
-      throw new CatalogError('invalid-catalog', `${path}.curation must be official or community.`)
+    if (input.curation !== 'academy' && input.curation !== 'community' && input.curation !== 'official') {
+      throw new CatalogError('invalid-catalog', `${path}.curation must be academy, community, or official.`)
     }
     source.curation = input.curation
   }
